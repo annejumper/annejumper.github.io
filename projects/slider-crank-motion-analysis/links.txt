@@ -1,0 +1,10 @@
+# Slider-Crank Motion Analysis
+source: https://annejumper.wixsite.com/annejumperportfolio/copy-of-jansen-walking-mechanism
+
+## Videos
+wix-video https://video.wixstatic.com/video/626a5f_71ff6a30643c401a83d9b3a4096f3989/720p/mp4/file.mp4 (720p) -> media/videos/626a5f_71ff6a30643c401a83d9b3a4096f3989.mp4  [NEEDS YOUTUBE UPLOAD]
+
+## Documents (PDF)
+https://626a5f1b-1bc8-43b1-ae8e-a271114117df.usrfiles.com/ugd/626a5f_0b8322201857403c9126358f0a9755b0.pdf -> docs/626a5f_0b8322201857403c9126358f0a9755b0.pdf
+
+## External links
