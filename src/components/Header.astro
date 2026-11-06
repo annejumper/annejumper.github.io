@@ -1,0 +1,33 @@
+---
+import { site } from '../data/site';
+import { url } from '../lib/util';
+const { current } = Astro.props;
+const nav = [
+  { key: 'projects', label: 'Projects', href: url('projects/') },
+  { key: 'research', label: 'Research', href: url('research/') },
+  { key: 'resume', label: 'Résumé', href: url('resume/') },
+  { key: 'contact', label: 'Contact', href: url('contact/') },
+];
+---
+<header class="site-header">
+  <div class="wrap bar">
+    <a class="brand" href={url('')} aria-current={current === 'home' ? 'page' : undefined}><span class="mark" aria-hidden="true">AJ</span>{site.name}</a>
+    <nav aria-label="Main">
+      <ul>
+        {nav.map((n) => (
+          <li><a href={n.href} aria-current={current === n.key ? 'page' : undefined}>{n.label}</a></li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+</header>
+<style>
+  .site-header { background: color-mix(in srgb, var(--fog) 94%, transparent); backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 5; border-bottom: 1px solid var(--fog-deep); }
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: 8px 24px; min-height: 60px; flex-wrap: wrap; padding-block: 10px; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 620; letter-spacing: -0.01em; color: var(--text); text-decoration: none; font-size: 1.05rem; }
+  .mark { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: 0.72rem; font-weight: 650; letter-spacing: 0.02em; }
+  ul { display: flex; gap: clamp(14px, 3vw, 28px); list-style: none; margin: 0; padding: 0; }
+  nav a { color: var(--muted); text-decoration: none; font-size: 0.95rem; font-weight: 500; padding-block: 4px; border-bottom: 1.5px solid transparent; }
+  nav a:hover { color: var(--text); }
+  nav a[aria-current='page'] { color: var(--text); border-bottom-color: var(--accent); }
+</style>

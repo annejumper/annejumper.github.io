@@ -1,0 +1,25 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../data/site';
+---
+<Base title="Contact" description={`Contact ${site.name}.`} current="contact">
+  <header class="band"><div class="wrap band-inner">
+    <h1>Contact</h1>
+    <p class="lead">{site.contactNote}</p>
+  </div></header>
+  <section class="wrap">
+    <dl>
+      <div><dt>Email</dt><dd><a href={`mailto:${site.email}`}>{site.email}</a></dd></div>
+      <div><dt>Personal email</dt><dd><a href={`mailto:${site.emailPersonal}`}>{site.emailPersonal}</a></dd></div>
+      <div><dt>LinkedIn</dt><dd><a href={site.linkedin} target="_blank" rel="me noopener">linkedin.com/in/anne-jumper-b1b645325</a></dd></div>
+    </dl>
+  </section>
+</Base>
+<style>
+  .lead { margin-top: 12px; }
+  dl { margin: 36px 0 0; display: grid; gap: 0; max-width: 560px; border-top: 1px solid var(--line); }
+  dl div { display: grid; gap: 4px 24px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  @media (min-width: 560px) { dl div { grid-template-columns: 160px 1fr; } }
+  dt { color: var(--faint); font-size: 0.9rem; }
+  dd { margin: 0; overflow-wrap: anywhere; }
+</style>

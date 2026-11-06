@@ -1,0 +1,59 @@
+---
+// YouTube: lightweight click-to-load facade on youtube-nocookie.com (no YouTube JS until clicked).
+// Self-hosted MP4: native <video>, nothing downloaded until play.
+import { getImage } from 'astro:assets';
+import { youtubeId, fileUrl, type Project } from '../lib/util';
+interface Props { project: Project; video: Project['data']['videos'][number] }
+const { project, video } = Astro.props;
+const yt = youtubeId(video.youtube);
+// A custom poster (if set) is used for both self-hosted videos and the YouTube click-to-load thumbnail.
+const poster = video.poster ? await getImage({ src: video.poster, width: 1280, format: 'webp' }) : null;
+// Self-hosted videos keep their own shape (phone videos are often vertical); YouTube stays 16:9.
+const w = !yt && video.poster ? video.poster.width : 16;
+const h = !yt && video.poster ? video.poster.height : 9;
+const portrait = h > w;
+---
+<figure class:list={["video", { portrait }]} style={`--ar: ${w} / ${h}; --grow: ${(w / h).toFixed(4)}`}>
+  {yt ? (
+    <button class="yt" type="button" data-yt={yt} aria-label={`Play video: ${video.title}`}>
+      <img src={poster?.src ?? `https://i.ytimg.com/vi/${yt}/hqdefault.jpg`} alt="" loading="lazy" width={poster?.attributes.width ?? 480} height={poster?.attributes.height ?? 360} />
+      <span class="play" aria-hidden="true"><svg viewBox="0 0 68 48"><path d="M66.5 7.7a8.5 8.5 0 0 0-6-6C55.3.3 34 .3 34 .3s-21.3 0-26.5 1.4a8.5 8.5 0 0 0-6 6C.1 12.9.1 24 .1 24s0 11.1 1.4 16.3a8.5 8.5 0 0 0 6 6C12.7 47.7 34 47.7 34 47.7s21.3 0 26.5-1.4a8.5 8.5 0 0 0 6-6c1.4-5.2 1.4-16.3 1.4-16.3s0-11.1-1.4-16.3z" fill="#212121" fill-opacity=".85"/><path d="M45 24 27 14v20z" fill="#fff"/></svg></span>
+    </button>
+  ) : (
+    <video controls playsinline preload="none" poster={poster?.src}>
+      <source src={fileUrl(project, video.file)} type="video/mp4" />
+      Your browser can't play this video. <a href={fileUrl(project, video.file)}>Download it</a>.
+    </video>
+  )}
+  <figcaption>
+    <strong>{video.title}</strong>{video.description && <span> — {video.description}</span>}
+  </figcaption>
+</figure>
+<style>
+  .video { margin: 0; }
+  video, .yt { width: 100%; aspect-ratio: var(--ar, 16 / 9); border-radius: var(--radius); background: #111; border: 0; }
+  video { object-fit: contain; }
+  .yt { position: relative; padding: 0; cursor: pointer; overflow: hidden; display: block; }
+  .yt img { width: 100%; height: 100%; object-fit: cover; }
+  .play { position: absolute; inset: 0; display: grid; place-items: center; }
+  .play svg { width: 68px; height: 48px; transition: transform .15s; }
+  .yt:hover .play svg path:first-child, .yt:focus-visible .play svg path:first-child { fill: #c00; fill-opacity: 1; }
+  .yt :global(iframe) { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  figcaption { margin-top: 10px; font-size: var(--step--1); color: var(--muted); }
+  figcaption strong { color: var(--text); font-weight: 600; }
+</style>
+<script>
+  document.querySelectorAll<HTMLButtonElement>('button.yt').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const f = document.createElement('iframe');
+      f.src = `https://www.youtube-nocookie.com/embed/${btn.dataset.yt}?autoplay=1&rel=0&modestbranding=1`;
+      f.title = btn.getAttribute('aria-label')?.replace('Play video: ', '') || 'YouTube video';
+      f.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      f.allowFullscreen = true;
+      f.referrerPolicy = 'strict-origin-when-cross-origin';
+      btn.replaceChildren(f);
+      btn.removeAttribute('aria-label');
+      btn.style.cursor = 'default';
+    }, { once: true });
+  });
+</script>

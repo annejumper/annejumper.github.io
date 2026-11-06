@@ -1,0 +1,33 @@
+---
+import { site } from '../data/site';
+import { url } from '../lib/util';
+const year = new Date().getFullYear();
+---
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="cta">
+      <p class="cta-title">Get in touch</p>
+      <a class="cta-mail" href={`mailto:${site.email}`}>{site.email}</a>
+    </div>
+    <div class="row">
+      <p>© {year} {site.name}</p>
+      <ul>
+        <li><a href={url('projects/')}>Projects</a></li>
+        <li><a href={url('research/')}>Research</a></li>
+        <li><a href={url('resume/')}>Résumé</a></li>
+        <li><a href={site.linkedin} rel="me noopener" target="_blank">LinkedIn</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
+<style>
+  .site-footer { background: var(--deep); color: #b9ccc6; margin-top: clamp(32px, 5vw, 56px); padding-block: clamp(40px, 6vw, 64px) 28px; font-size: var(--step--1); }
+  .cta { padding-bottom: 32px; border-bottom: 1px solid rgb(255 255 255 / .12); }
+  .cta-title { font-family: var(--font-display); font-size: var(--step-2); color: #fff; font-weight: 480; letter-spacing: -0.01em; }
+  .cta-mail { display: inline-block; margin-top: 8px; color: #9fd1c4; font-size: 1.05rem; text-decoration: none; }
+  .cta-mail:hover { color: #fff; text-decoration: underline; }
+  .row { display: flex; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap; padding-top: 22px; }
+  ul { display: flex; gap: 20px; flex-wrap: wrap; list-style: none; margin: 0; padding: 0; }
+  a { color: #d4e2dd; text-decoration: none; }
+  a:hover { color: #fff; text-decoration: underline; }
+</style>

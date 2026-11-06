@@ -1,0 +1,28 @@
+---
+import { fileUrl, type Project } from '../lib/util';
+interface Props { project: Project }
+const { project } = Astro.props;
+const docs = project.data.documents;
+---
+{docs.length > 0 && (
+  <ul class="docs">
+    {docs.map((d) => (
+      <li>
+        <a href={fileUrl(project, d.file)} target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M14 2v6h6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+          <span><strong>{d.title}</strong><small>PDF{d.description && ` · ${d.description}`}</small></span>
+        </a>
+      </li>
+    ))}
+  </ul>
+)}
+<style>
+  .docs { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  a { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); text-decoration: none; color: var(--text); }
+  a:hover { border-color: var(--accent); }
+  a:hover strong { color: var(--accent); }
+  svg { width: 20px; height: 20px; flex: none; color: var(--accent); margin-top: 1px; }
+  span { display: grid; gap: 2px; }
+  strong { font-weight: 600; font-size: 0.95rem; }
+  small { color: var(--faint); font-size: 0.8rem; line-height: 1.4; }
+</style>

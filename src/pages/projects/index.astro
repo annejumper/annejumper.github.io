@@ -1,0 +1,64 @@
+---
+import Base from '../../layouts/Base.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import { categoryOrder } from '../../data/site';
+import { getProjects, slugify } from '../../lib/util';
+
+const projects = await getProjects();
+const counts = new Map<string, number>();
+projects.forEach((p) => p.data.categories.forEach((c) => counts.set(c, (counts.get(c) || 0) + 1)));
+const cats = [...categoryOrder.filter((c) => counts.has(c)), ...[...counts.keys()].filter((c) => !categoryOrder.includes(c))];
+---
+<Base title="Projects" description="Engineering projects by Anne Jumper: design, simulation and FEA, robotics and electronics, dynamics, CAD, fabrication and research." current="projects">
+  <header class="band"><div class="wrap band-inner">
+    <h1>Projects</h1>
+    <p class="lead">Coursework, team, and research projects from Tufts Mechanical Engineering, plus high-school FTC robotics.</p>
+  </div></header>
+  <section class="wrap section top">
+
+    <div class="filters" role="group" aria-label="Filter projects by category" hidden>
+      <button type="button" data-filter="all" aria-pressed="true">All <span>{projects.length}</span></button>
+      {cats.map((c) => <button type="button" data-filter={c} data-slug={slugify(c)} aria-pressed="false">{c} <span>{counts.get(c)}</span></button>)}
+    </div>
+    <p class="visually-hidden" aria-live="polite" id="filter-status"></p>
+
+    <div class="grid" id="project-grid">
+      {projects.map((p, i) => <ProjectCard project={p} eager={i < 3} />)}
+    </div>
+  </section>
+</Base>
+<style>
+  .top { padding-top: 28px; }
+  .lead { margin-top: 12px; }
+  .band :global(h1) { margin: 0; }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; }
+  .filters button { font: inherit; font-size: 0.9rem; font-weight: 520; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer; }
+  .filters button span { color: var(--faint); font-weight: 450; margin-left: 2px; }
+  .filters button:hover { border-color: var(--faint); color: var(--text); }
+  .filters button[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .filters button[aria-pressed='true'] span { color: #cfe5de; }
+  .grid { display: grid; gap: 40px 28px; margin-top: 36px; }
+  @media (min-width: 640px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1000px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+  .grid :global(.card[hidden]) { display: none; }
+</style>
+<script>
+  const bar = document.querySelector<HTMLElement>('.filters')!;
+  const btns = [...bar.querySelectorAll<HTMLButtonElement>('button')];
+  const cards = [...document.querySelectorAll<HTMLElement>('#project-grid .card')];
+  const status = document.getElementById('filter-status')!;
+  bar.hidden = false; // filters only appear when JS is available; otherwise every project is shown
+  const apply = (cat: string, push = true) => {
+    let n = 0;
+    cards.forEach((c) => { const show = cat === 'all' || c.dataset.categories!.split('|').includes(cat); c.hidden = !show; if (show) n++; });
+    btns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.filter === cat)));
+    status.textContent = `${n} projects shown`;
+    if (push) {
+      const slug = btns.find((b) => b.dataset.filter === cat)?.dataset.slug;
+      history.replaceState(null, '', slug ? `#${slug}` : location.pathname);
+    }
+  };
+  btns.forEach((b) => b.addEventListener('click', () => apply(b.dataset.filter!)));
+  const fromHash = btns.find((b) => b.dataset.slug && `#${b.dataset.slug}` === location.hash);
+  if (fromHash) apply(fromHash.dataset.filter!, false);
+</script>

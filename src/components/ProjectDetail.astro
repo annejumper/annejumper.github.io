@@ -1,0 +1,164 @@
+---
+import { Picture, getImage } from 'astro:assets';
+import { render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Video from './Video.astro';
+import Gallery from './Gallery.astro';
+import Documents from './Documents.astro';
+import { url, projectHref, isResearch, youtubeId, type Project } from '../lib/util';
+
+interface Props { project: Project; prev?: Project; next?: Project; current?: 'projects' | 'research'; eyebrow?: string }
+const { project: p, prev, next, current = 'projects', eyebrow } = Astro.props;
+const d = p.data;
+const { Content } = await render(p);
+const hasBody = (p.body || '').replace(/<!--[\s\S]*?-->/g, '').trim().length > 0;
+const og = await getImage({ src: d.hero, width: 1200, format: 'jpg' });
+// Fields Claude guessed get a DRAFT marker on the dev server only (never in the published build).
+const isPortrait = (v: (typeof d.videos)[number]) => !youtubeId(v.youtube) && !!v.poster && v.poster.height > v.poster.width;
+const wideVideos = d.videos.filter((v) => !isPortrait(v));
+const tallVideos = d.videos.filter(isPortrait);
+const tallRows: (typeof tallVideos)[] = [];
+for (let i = 0; i < tallVideos.length; i += 4) tallRows.push(tallVideos.slice(i, i + 4));
+const draft = (f: string) => import.meta.env.DEV && d.guessed.includes(f);
+const facts = [
+  { k: 'role', label: 'Role', v: d.role },
+  { k: 'team', label: 'Team', v: d.team },
+  { k: 'course', label: isResearch(p) ? 'Program' : 'Course', v: d.course },
+  { k: 'date', label: 'Date', v: d.date },
+].filter((f) => f.v);
+---
+<Base title={d.title} description={d.summary} image={og.src} current={current}>
+  <header class="band"><div class="wrap band-inner head">
+      {current === 'projects'
+        ? <a class="back" href={url('projects/')}>← All projects</a>
+        : <p class="eyebrow">{eyebrow}</p>}
+      <h1>{d.title}{draft('title') && <span class="draft">draft</span>}</h1>
+      {d.summary && <p class="lead">{d.summary}{draft('summary') && <span class="draft">draft</span>}</p>}
+      {d.categories.length > 0 && <ul class="tags cats">{d.categories.map((c) => <li class="tag">{c}</li>)}</ul>}
+  </div></header>
+  <article class="wrap project">
+
+    <div class="hero">
+      <Picture src={d.hero} alt={d.heroAlt || d.title} widths={[640, 960, 1280, 1760]} sizes="(min-width: 1160px) 1100px, 100vw"
+        formats={['avif', 'webp']} fallbackFormat="webp" loading="eager" fetchpriority="high" layout="none" />
+    </div>
+
+    <div class="grid">
+      <aside class="facts" aria-label="Project details">
+        <dl>
+          {facts.map((f) => (
+            <div><dt>{f.label}</dt><dd>{f.v}{draft(f.k) && <span class="draft">guess</span>}</dd></div>
+          ))}
+          {d.tools.length > 0 && (
+            <div class="full"><dt>Tools{draft('tools') && <span class="draft">guess</span>}</dt>
+              <dd><ul class="tags">{d.tools.map((t) => <li class="tag">{t}</li>)}</ul></dd></div>
+          )}
+        </dl>
+        {d.documents.length > 0 && (
+          <div class="side-docs"><h2 class="side-h">Documents</h2><Documents project={p} /></div>
+        )}
+        {d.links.length > 0 && (
+          <ul class="links">{d.links.map((l) => <li><a href={l.url} target="_blank" rel="noopener">{l.label} ↗</a></li>)}</ul>
+        )}
+      </aside>
+
+      <div class="main">
+        {hasBody && draft('writeup') && <p class="draft-note">Draft writeup by Claude from your notes. Edit freely, then remove <code>writeup</code> from <code>guessed</code> in <code>projects/{p.id}/info.md</code>.</p>}
+        {hasBody && <div class="prose"><Content /></div>}
+        {!hasBody && import.meta.env.DEV && <p class="draft-note">No writeup yet. Add text below the frontmatter in <code>projects/{p.id}/info.md</code>.</p>}
+
+
+      </div>
+    </div>
+
+    {d.videos.length > 0 && (
+      <section class="block wide" aria-labelledby="videos-h">
+        <h2 id="videos-h" class="block-h">{d.videos.length > 1 ? 'Videos' : 'Video'}</h2>
+        {wideVideos.length > 0 && (
+          <div class="videos-wide">{wideVideos.map((v) => <Video project={p} video={v} />)}</div>
+        )}
+        {tallRows.map((row) => (
+          <div class:list={['videos-row', `n${row.length}`]}>{row.map((v) => <Video project={p} video={v} />)}</div>
+        ))}
+      </section>
+    )}
+
+    {d.gallery.length > 0 && (
+      <section class="block wide" aria-labelledby="gallery-h">
+        <h2 id="gallery-h" class="block-h">Gallery</h2>
+        <Gallery items={d.gallery} title={d.title} />
+      </section>
+    )}
+
+    {(prev || next) && (
+      <nav class="pager" aria-label="More projects">
+        {prev ? <a href={projectHref(prev)} class="prev"><small>Previous</small><span>{prev.data.title}</span></a> : <span />}
+        {next ? <a href={projectHref(next)} class="next"><small>Next</small><span>{next.data.title}</span></a> : <span />}
+      </nav>
+    )}
+  </article>
+</Base>
+<style>
+  .project { padding-top: clamp(24px, 4vw, 40px); }
+  .cats { margin-top: 18px; }
+  .cats .tag { background: var(--surface); color: var(--accent-hover); border: 1px solid var(--fog-deep); }
+  .back { font-size: var(--step--1); text-decoration: none; font-weight: 500; }
+  .back:hover { text-decoration: underline; }
+  .head > * { max-width: 860px; }
+  .head h1 { margin-top: 14px; }
+  .head .eyebrow + h1 { margin-top: 8px; }
+  .head .lead { margin-top: 14px; }
+  .hero { border-radius: var(--radius); overflow: hidden; background: var(--surface-2); border: 1px solid var(--line); }
+  .hero :global(img) { width: 100%; max-height: 640px; object-fit: contain; margin-inline: auto; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px 56px; margin-top: clamp(28px, 4vw, 48px); }
+  .main, .facts { min-width: 0; }
+  @media (min-width: 900px) {
+    .grid { grid-template-columns: minmax(0, 1fr) 280px; }
+    .facts { grid-column: 2; grid-row: 1; position: sticky; top: 84px; align-self: start; }
+    .main { grid-column: 1; grid-row: 1; }
+  }
+  dl { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px 20px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+  @media (min-width: 900px) { dl { grid-template-columns: 1fr; padding-top: 2px; } }
+  dl .full { grid-column: 1 / -1; }
+  dt { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); font-weight: 600; }
+  dd { margin: 4px 0 0; font-size: 0.95rem; line-height: 1.45; overflow-wrap: anywhere; }
+  dd .tags { margin-top: 6px; }
+  .side-docs { margin-top: 20px; }
+  .side-h { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); font-weight: 600; margin-bottom: 10px; }
+  .links { list-style: none; padding: 0; margin: 16px 0 0; font-size: 0.95rem; }
+  .block { margin-top: clamp(40px, 6vw, 64px); }
+  .main > .block:first-child { margin-top: 0; }
+  .block-h { font-family: var(--font-display); font-weight: 500; font-size: 1.6rem; letter-spacing: -0.01em; margin-bottom: 18px; }
+  /* Wide videos (YouTube, landscape): the first is large; the rest sit two to a row */
+  .videos-wide { display: grid; gap: 32px 24px; }
+  @media (min-width: 760px) {
+    .videos-wide { grid-template-columns: 1fr 1fr; align-items: start; }
+    .videos-wide > :global(.video:first-child) { grid-column: 1 / -1; max-width: 900px; }
+    .videos-wide > :global(.video:only-child) { grid-column: auto; }
+  }
+  .videos-wide + .videos-row { margin-top: 40px; }
+  /* Vertical videos: a justified row. Each item grows in proportion to its aspect ratio,
+     so every video in the row is the same height and the row fills the width. */
+  .videos-row { display: flex; gap: 20px; align-items: flex-start; }
+  .videos-row + .videos-row { margin-top: 32px; }
+  .videos-row > :global(.video) { flex: var(--grow) 1 0; min-width: 0; }
+  /* One or two vertical videos: fixed shared height instead of filling the width */
+  .videos-row.n1 > :global(.video), .videos-row.n2 > :global(.video) { flex: 0 0 calc(480px * var(--grow)); }
+  /* Phones: vertical videos scroll sideways at one height */
+  @media (max-width: 640px) {
+    .videos-row { overflow-x: auto; scroll-snap-type: x mandatory; gap: 12px; padding-bottom: 8px;
+      margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); scroll-padding-inline: var(--gutter); }
+    .videos-row > :global(.video), .videos-row.n1 > :global(.video), .videos-row.n2 > :global(.video) {
+      flex: 0 0 calc(min(62vh, 400px) * var(--grow)); scroll-snap-align: start; }
+  }
+
+  .draft-note { margin-bottom: 20px; color: #7a5a00; background: #fff8de; border: 1px dashed #e5cf7c; padding: 12px 14px; border-radius: var(--radius); font-size: 0.9rem; }
+  .pager { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: clamp(56px, 8vw, 96px); padding-top: 24px; border-top: 1px solid var(--line); }
+  .pager a { text-decoration: none; display: grid; gap: 2px; color: var(--text); }
+  .pager a:hover span { color: var(--accent); }
+  .pager a { padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+  .pager a:hover { border-color: var(--accent); }
+  .pager small { color: var(--faint); font-size: 0.8rem; }
+  .pager span { font-weight: 600; }
+  .pager .next { text-align: right; }
+</style>

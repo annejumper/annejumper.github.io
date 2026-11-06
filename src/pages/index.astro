@@ -1,0 +1,84 @@
+---
+import Base from '../layouts/Base.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { Picture, getImage } from 'astro:assets';
+import { site } from '../data/site';
+import portrait from '../assets/portrait.jpg';
+import { getProjects, url, isResearch } from '../lib/util';
+
+const projects = await getProjects();
+const featured = projects.filter((p) => p.data.featured > 0 && !isResearch(p)).sort((a, b) => a.data.featured - b.data.featured);
+const research = projects.filter(isResearch).sort((a, b) => b.data.sortDate.localeCompare(a.data.sortDate));
+const og = await getImage({ src: portrait, width: 1200, height: 630, fit: 'cover', position: 'top', format: 'jpg' });
+---
+<Base current="home" image={og.src}>
+  <section class="hero-band">
+    <div class="wrap intro">
+      <div class="intro-text">
+        <div class="avatar" aria-hidden="true">
+          <Picture src={portrait} alt="" widths={[160, 320]} sizes="112px" formats={['avif', 'webp']} fallbackFormat="webp" layout="none" loading="eager" />
+        </div>
+        <p class="eyebrow">{site.role}</p>
+        <h1>{site.name}</h1>
+        {site.intro.map((t) => <p class="lead">{t}</p>)}
+        <div class="actions">
+          <a class="btn btn-primary" href={url('projects/')}>View projects</a>
+          <a class="btn" href={url('resume/')}>Résumé</a>
+          <a class="btn" href={`mailto:${site.email}`}>Email</a>
+          <a class="btn" href={site.linkedin} target="_blank" rel="me noopener">LinkedIn</a>
+        </div>
+      </div>
+      <figure class="portrait">
+        <Picture src={portrait} alt={`Portrait of ${site.name}`} widths={[420, 640, 900]} sizes="(min-width: 900px) 420px, 0px"
+          formats={['avif', 'webp']} fallbackFormat="webp" layout="none" loading="eager" fetchpriority="high" />
+      </figure>
+    </div>
+  </section>
+
+  {research.length > 0 && (
+    <section class="wrap section research-section" aria-labelledby="research-h">
+      <div class="section-head">
+        <h2 id="research-h">Research</h2>
+        <a class="arrow-link" href={url('research/')}>All research →</a>
+      </div>
+      <div class="research-grid">
+        {research.map((p) => <ProjectCard project={p} />)}
+      </div>
+    </section>
+  )}
+
+  <section class="wrap section featured-section" aria-labelledby="featured-h">
+    <div class="section-head">
+      <h2 id="featured-h">Selected work</h2>
+      <a class="arrow-link" href={url('projects/')}>All {projects.length} projects →</a>
+    </div>
+    <div class="featured">
+      {featured.map((p, i) => <ProjectCard project={p} size="large" eager={i < 2} />)}
+    </div>
+  </section>
+
+</Base>
+<style>
+  .hero-band { background: var(--fog); border-bottom: 1px solid var(--fog-deep); position: relative; overflow: hidden; }
+  .hero-band::after { /* soft sage glow, purely decorative */
+    content: ''; position: absolute; width: 640px; height: 640px; right: -180px; top: -260px; border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(143 176 166 / .35), transparent); pointer-events: none; }
+  .intro { position: relative; z-index: 1; display: grid; gap: 40px 64px; align-items: center; padding-block: clamp(40px, 7vw, 96px); }
+  @media (min-width: 900px) { .intro { grid-template-columns: minmax(0, 1fr) 380px; } }
+  .intro h1 { margin-top: 10px; }
+  .intro .lead { margin-top: 18px; color: var(--muted); font-size: clamp(1rem, 0.94rem + 0.4vw, 1.16rem); line-height: 1.65; max-width: 62ch; }
+  .intro .lead + .lead { margin-top: 12px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+  .portrait { margin: 0; display: none; }
+  .portrait :global(img) { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; object-position: 50% 35%; border-radius: 14px;
+    box-shadow: 0 1px 2px rgb(29 56 51 / .08), 0 12px 32px -12px rgb(29 56 51 / .25); }
+  .avatar { width: 112px; height: 112px; border-radius: 50%; overflow: hidden; margin-bottom: 20px; border: 3px solid var(--surface); box-shadow: 0 6px 18px -8px rgb(29 56 51 / .35); }
+  .avatar :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: 50% 25%; }
+  @media (min-width: 900px) { .portrait { display: block; } .avatar { display: none; } }
+  .research-section { padding-top: clamp(48px, 7vw, 80px); }
+  .featured { display: grid; gap: 44px 32px; }
+  @media (min-width: 720px) { .featured { grid-template-columns: 1fr 1fr; } }
+  .research-grid { display: grid; gap: 40px 28px; padding: clamp(20px, 3vw, 32px); background: var(--fog); border: 1px solid var(--fog-deep); border-radius: 14px; }
+  @media (min-width: 640px) { .research-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1000px) { .research-grid { grid-template-columns: repeat(3, 1fr); } }
+</style>

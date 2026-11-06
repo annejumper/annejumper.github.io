@@ -1,0 +1,59 @@
+---
+import Base from '../layouts/Base.astro';
+import { Picture } from 'astro:assets';
+import { site } from '../data/site';
+import { url } from '../lib/util';
+
+const pdf = url(site.resumeFile);
+// Page images are rendered from site-pages/resume.pdf by scripts/sync-assets.mjs
+const pages = Object.entries(import.meta.glob<{ default: ImageMetadata }>('../assets/resume/page-*.png', { eager: true }))
+  .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
+  .map(([, m]) => m.default);
+---
+<Base title="Résumé" description={`Résumé of ${site.name}, Mechanical Engineering and Mathematics student at Tufts University.`} current="resume">
+  <header class="band"><div class="wrap band-inner head">
+    <div>
+      <h1>Résumé</h1>
+      <p class="updated">PDF · {pages.length === 1 ? "one page" : `${pages.length} pages`}</p>
+    </div>
+    <div class="actions">
+      <a class="btn btn-primary" href={pdf} download="Anne-Jumper-Resume.pdf">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Download PDF
+      </a>
+      <a class="btn" href={pdf} target="_blank" rel="noopener">Open PDF</a>
+    </div>
+  </div></header>
+
+  <section class="sheet-area">
+    <div class="wrap">
+      {pages.length > 0 ? pages.map((img, i) => (
+        <a class="sheet" href={pdf} target="_blank" rel="noopener" aria-label={`Open résumé PDF (page ${i + 1})`}>
+          <Picture src={img} alt={`Résumé of ${site.name}, page ${i + 1}`} widths={[600, 900, 1250, 1700]}
+            sizes="(min-width: 900px) 850px, 100vw" formats={['avif', 'webp']} fallbackFormat="webp" quality={90}
+            loading={i === 0 ? 'eager' : 'lazy'} layout="none" />
+        </a>
+      )) : (
+        <p class="fallback"><a href={pdf}>Open the résumé PDF</a></p>
+      )}
+    </div>
+  </section>
+</Base>
+<style>
+  .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; }
+  .updated { margin-top: 6px; color: var(--faint); font-size: var(--step--1); }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .sheet-area { background: var(--fog); padding-block: clamp(20px, 4vw, 48px) clamp(32px, 6vw, 72px); }
+  .sheet {
+    display: block; max-width: 850px; margin-inline: auto; background: #fff; border-radius: 4px; overflow: hidden;
+    box-shadow: 0 1px 2px rgb(29 56 51 / .08), 0 18px 48px -18px rgb(29 56 51 / .35);
+    transition: box-shadow .2s, transform .2s;
+  }
+  .sheet + .sheet { margin-top: 28px; }
+  .sheet:hover { box-shadow: 0 1px 2px rgb(29 56 51 / .1), 0 24px 56px -18px rgb(29 56 51 / .45); transform: translateY(-2px); }
+  @media (prefers-reduced-motion: reduce) { .sheet:hover { transform: none; } }
+  .sheet :global(img) { width: 100%; height: auto; display: block; }
+  .fallback { padding: 24px; text-align: center; }
+  /* let the green sheet area run straight into the footer */
+  :global(body:has(.sheet-area) .site-footer) { margin-top: 0; }
+</style>

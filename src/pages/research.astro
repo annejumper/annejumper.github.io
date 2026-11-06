@@ -1,0 +1,23 @@
+---
+import Base from '../layouts/Base.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { getProjects, isResearch } from '../lib/util';
+const research = (await getProjects()).filter(isResearch).sort((a, b) => b.data.sortDate.localeCompare(a.data.sortDate));
+---
+<Base title="Research" description="Research by Anne Jumper: violin plate acoustics and modal analysis at Tufts, and solid-state battery modeling at Lawrence Berkeley National Laboratory." current="research">
+  <header class="band"><div class="wrap band-inner">
+    <h1>Research</h1>
+    <p class="lead">Violin acoustics and modal analysis at Tufts (my summer research internship and senior thesis), and solid-state battery modeling at Lawrence Berkeley National Laboratory.</p>
+  </div></header>
+  <section class="wrap section top">
+    <div class="grid">
+      {research.map((p, i) => <ProjectCard project={p} size="large" eager={i < 2} />)}
+    </div>
+  </section>
+</Base>
+<style>
+  .top { padding-top: 36px; }
+  .lead { margin-top: 12px; }
+  .grid { display: grid; gap: 44px 32px; }
+  @media (min-width: 720px) { .grid { grid-template-columns: 1fr 1fr; } }
+</style>
