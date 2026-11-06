@@ -1,0 +1,9 @@
+# Load-Carrying Robot
+source: https://annejumper.wixsite.com/annejumperportfolio/load-carrying-robot-1
+
+## Videos
+wix-video https://video.wixstatic.com/video/626a5f_1f9cb27d8807413cadc6d7ff29df781d/720p/mp4/file.mp4 (720p) -> media/videos/626a5f_1f9cb27d8807413cadc6d7ff29df781d.mp4  [NEEDS YOUTUBE UPLOAD]
+
+## Documents (PDF)
+
+## External links

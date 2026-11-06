@@ -1,0 +1,10 @@
+# Jansen Walking Mechanism
+source: https://annejumper.wixsite.com/annejumperportfolio/copy-of-human-gait-analysis
+
+## Videos
+wix-video https://video.wixstatic.com/video/626a5f_488c009691ec45f3ac6a3e538f51759b/1080p/mp4/file.mp4 (1080p) -> media/videos/626a5f_488c009691ec45f3ac6a3e538f51759b.mp4  [NEEDS YOUTUBE UPLOAD]
+
+## Documents (PDF)
+https://626a5f1b-1bc8-43b1-ae8e-a271114117df.usrfiles.com/ugd/626a5f_e63230e4abde46c5bf60035ec6c4679e.pdf -> docs/626a5f_e63230e4abde46c5bf60035ec6c4679e.pdf
+
+## External links
