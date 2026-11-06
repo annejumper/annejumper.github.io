@@ -1,0 +1,9 @@
+# Breakout Cooling Hole Simulation
+source: https://annejumper.wixsite.com/annejumperportfolio/copy-of-airfoil-simulation
+
+## Videos
+
+## Documents (PDF)
+https://626a5f1b-1bc8-43b1-ae8e-a271114117df.usrfiles.com/ugd/626a5f_ca7bc1816ef24b328cbe9918904990b3.pdf -> docs/626a5f_ca7bc1816ef24b328cbe9918904990b3.pdf
+
+## External links
