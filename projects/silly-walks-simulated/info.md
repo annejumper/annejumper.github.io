@@ -6,7 +6,7 @@ tools: ["Onshape", "onshape-to-robot", "MuJoCo", "mjlab", "PPO (reinforcement le
 course: "AI in Mobile Robots (ME 193)"
 date: "Fall 2026"
 sortDate: "2026-11"
-team: "Team of 2 (with Kendrick)"
+team: "Team of 2 (with Kendrick Koumba)"
 role: ""
 featured: 0
 hero: "./hero.png"
@@ -69,7 +69,7 @@ links:
   - label: "Code on GitHub"
     url: "https://github.com/annejumper/AI-in-Mobile-Robots/tree/main/SillyWalksSimulated"
 source: ""
-guessed: ["summary", "team"]  # fields Claude drafted — remove once confirmed
+guessed: ["summary"]  # fields Claude drafted — remove once confirmed
 ---
 We built a LEGO robot from a LEGO Education Double Motor with a 1×8 Technic beam attached to each motor hub by two friction pegs. When the motors turn, the beams push the robot along in a wobbly "silly walk". Each leg pushes a little differently on every step, and some steps slip more than others, so the robot tends to drift and turn. The goal was to make it **walk in a straight line**.
 

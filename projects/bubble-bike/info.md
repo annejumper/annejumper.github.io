@@ -2,7 +2,7 @@
 title: "Bubble Bike"
 summary: "Senior design project for Dr. Zigs: a bike-mounted bubble machine that keeps producing bubbles while riding, without sloshing, foaming or spilling its solution."
 categories: ["Design", "Simulation", "Fabrication", "Robotics & Electronics"]
-tools: ["COMSOL 6.4 (two-phase flow, moving mesh)", "Laser cutting", "Peristaltic pump", "DC gear motors"]
+tools: ["COMSOL 6.4 (two-phase flow, moving mesh)", "MATLAB", "Laser cutting", "Peristaltic pump", "DC gear motors"]
 course: "Senior Design"
 date: "Fall 2026"
 sortDate: "2026-11"
@@ -36,11 +36,14 @@ gallery:
   - src: "./media/three-quarter.jpg"
     caption: "Three-quarter view with the reservoir bottle"
     group: "Prototype 1"
-  - src: "./media/comsol-t1.png"
-    caption: "COMSOL, t = 0.475 s (inlet ≈ 4.75 m/s): the air jet pushes the film into a dome just before the mesh fails. Axisymmetric: the left edge is the axis, and the white square is the wand cross-section."
+  - src: "./media/comsol-mesh.png"
+    caption: "COMSOL mesh: (a) full axisymmetric domain, (b) refined around the film and wand (about 40 elements across the film). The mesh deforms with the film as it inflates."
     group: "COMSOL: blowing on the soap film"
-  - src: "./media/comsol-t0.png"
-    caption: "COMSOL, t = 0: flat film spanning the 9.5 mm wand, with the inlet jet starting at the bottom left"
+  - src: "./media/comsol-film-deflection.png"
+    caption: "Normalized film-center displacement vs. inlet air speed for each wand size. Circles mark the threshold (film center at 90% of the wand radius)."
+    group: "COMSOL: blowing on the soap film"
+  - src: "./media/comsol-centerline-speed.png"
+    caption: "Air speed along the jet centerline for the 9 mm wand: the jet slows sharply just before the film"
     group: "COMSOL: blowing on the soap film"
 videos:
   - title: "Prototype 1 making bubbles"
@@ -94,11 +97,38 @@ The key design choice is to **never dip the wand**. The solution stays in a clos
 
 ## COMSOL: how much air does it take to blow a bubble?
 
-Prototype 1's bubbles came out smaller than our target, and wand size and fan airflow are the main levers. To size the fan and nozzle, I'm building a COMSOL model of an air jet blowing on a soap film. The goal is the **threshold air speed**: below it the film settles into a stable dome, and above it the dome keeps growing, which is when a bubble starts to form.
+Prototype 1's bubbles came out smaller than our target, and wand size and fan airflow are the main levers. The key unknown is: **for a given wand, how fast must the air be to form a bubble?** That sets bubble size, fan selection and power draw, which matters once the machine runs on limited bike power. Prototype 1 uses a 9 mm inner wand diameter, so I compared it against other sizes, first with a hand calculation and then with a COMSOL sweep.
 
-- **Model.** It's a 2D axisymmetric Laminar Two-Phase Flow, Moving Mesh study. I treat the soap film as a zero-thickness interface between two air domains, with tension 2γ for its two surfaces. I validate against Hamlett et al. (*Blowing big bubbles*): a 9.5 mm wand radius, γ = 25 mN/m for their dish-soap solution, and a jet matched to the wand.
-- **Study.** The inlet speed ramps from 0 to 10 m/s over 1 s, slowly compared with the film's millisecond response, so the film stays near equilibrium until it passes the threshold. The knee in the film-center position vs. inlet speed curve marks the threshold.
-- **Status.** The run reaches t ≈ 0.48 s (about 4.8 m/s) before the mesh fails. For comparison, the hand estimate ½ρU² ≈ 4γ/R<sub>w</sub> gives about 4.2 m/s, and Hamlett measured about 7 m/s for this wand. Reading off the threshold is next.
+**Hand calculation.** The film can resist a pressure of at most Δp = 4γ/R<sub>w</sub>, reached when it bulges into a hemisphere spanning the wand (the factor of 4 is for the film's two surfaces). The jet pushes with dynamic pressure ½ρU², so a bubble forms above
+
+U\* = √(8γ / ρR<sub>w</sub>)
+
+With γ ≈ 0.025 N/m for a dish-soap solution and ρ ≈ 1.2 kg/m³, the 9 mm wand needs U\* ≈ 6.1 m/s. This assumes the full jet pressure acts uniformly on the film, and it ignores how the jet slows near the film and flows around the wand.
+
+**COMSOL model.** A 2D axisymmetric Laminar Two-Phase Flow, Moving Mesh model in COMSOL 6.4: rotated about the axis, the square wand cross-section becomes a ring. The soap film is a zero-thickness interface with tension 2γ between two air domains, pinned at the wand's inner edge. The inlet speed ramps linearly (U = 10 m/s² × t), slowly enough that the film settles to the dome it would have at each constant speed. Since the model can't show a bubble detaching, the threshold is the speed at which the film center reaches 90% of the wand radius. I swept wand diameters of 6, 9, 12, 15, 19 and 25 mm. Refining the film from 3 to 40 elements changed the thresholds by less than 3%.
+
+![Pressure coefficient and streamlines for the 9 mm wand at 3.6 m/s (top) and 7.45 m/s (bottom), close-up and full domain](./media/comsol-pressure-streamlines.png)
+
+![Simulated film profiles for the 9 mm wand at increasing air speeds; the dashed line is a hemisphere](./media/comsol-film-profiles.png)
+
+**Results.**
+
+| Inner diameter | Simulated U\* | Hand calc. U\* |
+|---|---|---|
+| 9 mm (current) | 7.42 m/s | 6.09 m/s |
+| 12 mm | 5.82 m/s | 5.27 m/s |
+| 15 mm | 4.91 m/s | 4.71 m/s |
+| 19 mm | 4.22 m/s | 4.19 m/s |
+
+![Threshold air speed vs. wand diameter: COMSOL, hand calculation, and Hamlett et al.'s measurement](./media/comsol-threshold-vs-diameter.png)
+
+The hand calculation agrees with the simulation for larger wands, but smaller wands need progressively more air than it predicts: the jet slows sharply just before the film, so only about 45–60% of its dynamic pressure acts on it. For the 19 mm wand, the simulated 4.22 m/s is below Hamlett et al.'s measured 7 m/s, likely because the model assumes an ideal film, so the thresholds are best read as minimums. Varying the eddy viscosity from 50× to 200× air's changed the 9 mm threshold by −12% to +19% (and the 19 mm by +6%), so the model is most reliable for **comparing wand sizes**, not for exact air speeds.
+
+**Design takeaway.** Required air speed rises steeply below 12 mm. At 1.5× the threshold, the 9 mm wand needs about **74 Pa** of fan pressure, versus 46 Pa at 12 mm, 33 Pa at 15 mm and 24 Pa at 19 mm, and small fans are pressure-limited. Bubble diameter is about 2× the wand's, so a **12–15 mm wand** gives roughly 2.4–3 cm bubbles: within our size target, at a fan pressure that suits the voltage limits of a dynamo. The simulation also showed that the fan-to-wand distance matters, which we'll test next.
+
+![Required fan pressure (at 1.5× threshold) and expected bubble diameter vs. wand diameter](./media/comsol-fan-pressure.png)
+
+**Limitations.** The model only predicts the onset of a bubble, not detachment or bursting. In the real machine the wands spin through the jet, aren't always centered or perpendicular to it, and have ridged rims; the fan's flow is nonuniform and turbulent; the film's thickness, surface tension and integrity vary; and riding adds wind.
 
 Getting the model to run took several fixes, each with a physical reason:
 
@@ -107,8 +137,12 @@ Getting the model to run took several fixes, each with a physical reason:
 3. **Mesh nodes on the axis must be held to r = 0** but stay free to slide along z. Otherwise they cross the axis and the axisymmetric equations break down.
 4. **The film has to be pinned to the wand.** COMSOL's two-phase interface lets contact points slide along walls by default, which suits droplets. An unpinned film is pushed downstream like a piston and inverts the mesh.
 
-The model stops at the threshold. It doesn't cover detachment, so it can't predict bubble size; for that, Hamlett and Salkin's experiments put bubble diameter at about 2× the wand diameter. Next, I'll sweep wand radius and jet width to get a minimum-airflow curve for each candidate wand, then check it on a test rig with an anemometer and a camera.
+Final fan selection and the real air speed at the wand will be confirmed by measurement.
+
+## Two designs: Bubble Bike and a flat-pack version
+
+Prototype 1 runs on a battery, but batteries rely on resource- and labor-intensive mining, so the next prototype will be fully pedal-powered: a **dynamo** turns pedaling into electricity for the fan and wand motors. We also realized that a safe, efficient, ride-ready machine has to be a fully assembled product that Dr. Zigs sells, which works against the client's goal of reaching every child regardless of circumstance. So we pivoted to a two-design solution with Paola's NGO, **Bubbles Not Bombs**: for each Bubble Bike sold, a child in a conflict zone receives a **hand-cranked, flat-packed bubble machine** with no electronics, made of laser-cut bamboo plywood with injection-molded recycled-plastic wand, wiper and fan blades. It will also be open source, so anyone with a 3D printer can make one.
 
 ## Next steps
 
-Next we'll power the machine from the bike itself, design the mount and casing for real riding, and test against the remaining requirements. This page will grow as the project does.
+Next we'll build the dynamo-powered second prototype with a larger wand, design the bike mount and casing for real riding, and test against the remaining requirements. For production, the housing would move to laser-cut bamboo plywood (more sustainable, and already used in other Dr. Zigs products), with injection-molded recycled plastic for the wand and wiper. This page will grow as the project does.
