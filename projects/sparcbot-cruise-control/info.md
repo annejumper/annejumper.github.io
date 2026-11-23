@@ -1,11 +1,11 @@
 ---
 title: "SparcBot Cruise Control"
-summary: "From motor modeling to wheel-speed control: system identification, PD balancing of an inverted pendulum, PI control with anti-windup, and feedforward + PI cruise control on a differential-drive robot we assembled."
+summary: "From motor modeling to trajectory tracking: system identification, PD balancing of an inverted pendulum, PI control with anti-windup, feedforward + PI cruise control, and full-state feedback with observability on a differential-drive robot we assembled."
 categories: ["Controls", "Robotics & Electronics"]
-tools: ["Python", "ROS 2", "Raspberry Pi", "System identification", "PID + feedforward"]
+tools: ["Python", "ROS 2", "Raspberry Pi", "System identification", "PID + feedforward", "Full-state feedback", "Observability analysis"]
 course: "Digital Control of Dynamic Systems (ME 130)"
 date: "Fall 2026 (in progress)"
-sortDate: "2026-10"
+sortDate: "2026-11"
 team: "Team of 2 (with Zack Siminoff)"
 role: ""
 featured: 2
@@ -64,6 +64,8 @@ links:
     url: "https://github.com/annejumper/ME130_Lab2"
   - label: "Lab 5 controller changes (SparcBot)"
     url: "https://github.com/annejumper/sparcbot/commit/aa22818"
+  - label: "Lab 6 circle tracker (SparcBot)"
+    url: "https://github.com/annejumper/sparcbot/blob/main/src/sparcbot_control/sparcbot_control/circle_tracker.py"
 source: ""
 guessed: ["summary", "writeup", "tools"]  # fields Claude drafted — remove once confirmed
 ---
@@ -90,5 +92,18 @@ We assembled the robot from two of the motor, encoder and driver units used in t
 - **Controller.** Each wheel runs feedforward on the target velocity, plus P and I feedback on a lightly filtered velocity error, plus breakaway compensation that adds a fixed offset in the direction of motion to overcome static friction.
 - **Step tests.** Spinning-in-place and forward/backward steps track the command within the ±⅓ band and the 0.5 s settling target. There is some overshoot on the largest step.
 - **Changing slope.** At a constant commanded speed, the logged wheel velocities dip as the front wheels, then the rear wheel, reach the ramp, and again at the start of the incline, where the controller recovers more slowly. The noise in the measured velocity turned out to come from the sensing, not from our gains.
+
+## Lab 6: tracking a circle, and why dead reckoning drifts
+
+With wheel speeds under control, the next layer is a **full-state feedback** controller that generates v and ω to make SparcBot drive a circle (r = 0.4 m at v<sub>d</sub> = 0.2 m/s, ω<sub>d</sub> = 0.5 rad/s, one lap every 4π s). The robot estimates its pose (x, y, θ) by integrating its encoder wheel speeds, known as dead reckoning. The tracking error is expressed in the robot's frame (forward, lateral and heading error), and linearizing the unicycle model about the circle gives constant error dynamics ė = A e + B δu. The system is reachable, so the controller u = −K e + [v<sub>d</sub> ω<sub>d</sub>]ᵀ can place the closed-loop poles anywhere. Using gains k₁ = −3 (forward error → v) and k₅ = −8.75, k₆ = −3 (lateral and heading error → ω) places them at −1, −2 and −3.
+
+We drove four laps back to back without moving the robot, measuring where it actually ended after each one, in two experiments:
+
+- **Dead reckoning only.** The only measurements are wheel speeds, so C = 0 and the observability matrix W<sub>o</sub> = [C; CA; CA²] has **rank 0**: nothing the robot measures reveals its pose error. Every lap started from the previous lap's erroneous endpoint, so the error accumulated: the robot ended 25 cm from the start after lap 1 and 76 cm away after lap 4, with its heading off by 123°.
+- **With pose correction.** After each lap we measured the robot's real pose and sent it to the odometry (a `set_pose` call). Measuring x, y and θ directly adds an identity block to C, and W<sub>o</sub> has **full rank (3)**, so the system becomes observable. The endpoints stayed within about 5 cm of each other across all four laps, with headings of 24–32°.
+
+![Where the robot ended after each lap, with and without pose correction](./media/lab6-endpoints.png)
+
+In both experiments the first lap ended about 25 cm from the start, so a single lap already picks up noticeable error. The difference is that correction stops it from compounding. Sources of error we identified: when the car accelerates it tips forward, lifting the rear caster and unevenly loading the front wheels, which causes slip that the encoders count as motion. It also jitters and creeps after stopping, before we could stop the driver, so the pose changed slightly between the lap's end and our measurement. Smaller contributions come from wheel-radius and base-width errors, encoder noise, mismatched left and right motors, and our own tape-measure readings.
 
 The remaining labs build on this controller. I'll add them here as the course goes on.
