@@ -10,10 +10,10 @@ const pages = Object.entries(import.meta.glob<{ default: ImageMetadata }>('../as
   .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
   .map(([, m]) => m.default);
 ---
-<Base title="Résumé" description={`Résumé of ${site.name}, Mechanical Engineering and Mathematics student at Tufts University.`} current="resume">
+<Base title="Resume" description={`Resume of ${site.name}, Mechanical Engineering and Mathematics student at Tufts University.`} current="resume">
   <header class="band"><div class="wrap band-inner head">
     <div>
-      <h1>Résumé</h1>
+      <h1>Resume</h1>
       <p class="updated">PDF · {pages.length === 1 ? "one page" : `${pages.length} pages`}</p>
     </div>
     <div class="actions">
@@ -28,13 +28,13 @@ const pages = Object.entries(import.meta.glob<{ default: ImageMetadata }>('../as
   <section class="sheet-area">
     <div class="wrap">
       {pages.length > 0 ? pages.map((img, i) => (
-        <a class="sheet" href={pdf} target="_blank" rel="noopener" aria-label={`Open résumé PDF (page ${i + 1})`}>
-          <Picture src={img} alt={`Résumé of ${site.name}, page ${i + 1}`} widths={[600, 900, 1250, 1700]}
+        <a class="sheet" href={pdf} target="_blank" rel="noopener" aria-label={`Open resume PDF (page ${i + 1})`}>
+          <Picture src={img} alt={`Resume of ${site.name}, page ${i + 1}`} widths={[600, 900, 1250, 1700]}
             sizes="(min-width: 900px) 850px, 100vw" formats={['avif', 'webp']} fallbackFormat="webp" quality={90}
             loading={i === 0 ? 'eager' : 'lazy'} layout="none" />
         </a>
       )) : (
-        <p class="fallback"><a href={pdf}>Open the résumé PDF</a></p>
+        <p class="fallback"><a href={pdf}>Open the resume PDF</a></p>
       )}
     </div>
   </section>
